@@ -14,6 +14,7 @@ type UserStore interface {
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	InsertUser(context.Context, *types.User) (*types.User, error)
+	DeleteUser(context.Context, string) error
 }
 
 type MongoUserStore struct {
@@ -63,4 +64,16 @@ func (s *MongoUserStore) InsertUser(ctx context.Context, user *types.User) (*typ
 	}
 	user.ID = res.InsertedID.(primitive.ObjectID)
 	return user, nil
+}
+
+func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	if _, err = s.coll.DeleteOne(ctx, bson.M{"_id": objID}, nil); err != nil {
+		return err
+	}
+	return nil
+
 }
